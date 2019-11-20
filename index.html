@@ -1,0 +1,115 @@
+<html>
+<head>
+	<title>VK Animation</title>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.5.9/lottie_html.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+	<span class="special_event_highlight" style="color: #ffa000;" data-id="kojima_genius" data-v="1" data-duration="4250" onclick="SpecialEvent.start(this, event);">Кодзима</span>
+
+	<span class="special_event_highlight" style="color: #28b93c;" data-id="first_april" data-v="2" data-duration="3400" onclick="SpecialEvent.start(this, event);">Ха-ха</span>
+
+	<span class="special_event_highlight" style="color: #009ee1;" data-id="zenit_champion" data-v="3" data-duration="3600" onclick="SpecialEvent.start(this, event);">Зенит</span>
+
+	<!-- Animation: /images/stickers/special/kojima_genius/animation.json?v=3 -->
+
+	<script>
+		const fo = bodymovin /*o("nJnv")*/;
+
+		window.domData = function(elem, attr, val) {
+			if(elem) {
+				if(val !== undefined) {
+					if(val === null) {
+						elem.removeAttribute("data-" + attr)
+					}
+					else {
+						elem.setAttribute("data-" + attr, val);
+						return val;
+					}
+				}
+				else {
+					return elem.getAttribute("data-" + attr);
+				}
+			}
+			else {
+				return null;
+			}
+		};
+
+		window.SpecialEvent = {
+			start: function (e, t) {
+				t.stopPropagation();
+				t.preventDefault();
+				this.id = window.domData(e, "id");
+
+				console.log(this);
+
+				if (this.id) {
+					if(!this.timeoutHandle) {
+						const curVer = Number(window.domData(e, "v")) || 0;
+
+						if(!this.duration) {
+							this.duration = Number(window.domData(e, "duration")) || 0;
+						}
+
+						if(this.duration) { 
+							if(!this.animationData || !this.animationData.v || ("number" == typeof this.v && this.v !== curVer)) {
+								this.v = curVer;
+
+								this._getAnimation()
+									.then(e => {
+										this.animationData = JSON.parse(e);
+										this._play();
+									});
+							}
+							else {
+								this._play();
+							}
+						}
+
+					}
+				}
+			},
+
+			_getAnimation: function () {
+				return new Promise(callback => {
+					var t = new XMLHttpRequest;
+					t.open("GET", `/images/stickers/special/${this.id}/animation.json?v=${this.v}`, true);
+					t.send();
+					t.onreadystatechange = () => {
+						if(4 === t.readyState) {
+							callback(t.responseText);
+						}
+					}
+				});
+			},
+
+			_play: function () {
+
+				if(!this.frame) {
+					this.frame = document.createElement("div");
+					this.frame.className = "special_event_frame";
+					document.body.appendChild(this.frame);
+				}
+
+				this.frame.style.display = "block";
+				var e = fo.loadAnimation({
+					container: this.frame,
+					renderer: "svg",
+					loop: true,
+					autoplay: true,
+					animationData: this.animationData
+				});
+
+				this.timeoutHandle = setTimeout(() => {
+					e.stop();
+					e.destroy();
+					this.frame.style.display = "none";
+					this.timeoutHandle = null;
+				}, this.duration);
+			}
+		}
+	</script>
+</body>
+</html>
